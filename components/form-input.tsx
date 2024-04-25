@@ -2,11 +2,11 @@ interface IFormInput {
   type: string;
   placeholder: string;
   required: boolean;
-  errorMessage: string;
+  errorMessage?: string;
   name: string;
 }
 
-export default function FormInput({ type, placeholder, required, errorMessage, name }: IFormInput) {
+export default function FormInput({ type, placeholder, required, errorMessage = "", name }: IFormInput) {
   return (
     <div className="flex flex-col gap-2">
       <input
