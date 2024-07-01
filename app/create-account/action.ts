@@ -25,33 +25,6 @@ const checkPasswords = ({
   confirmPassword: string;
 }) => password === confirmPassword;
 
-// 유저명 중복 체크
-const checkUniqueUsername = async (username: string) => {
-  const user = await db.user.findUnique({
-    where: {
-      username: username,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  return !Boolean(user);
-};
-
-// E-mail 중복 체크
-const checkUniqueEmail = async (email: string) => {
-  const user = await db.user.findUnique({
-    where: {
-      email: email,
-    },
-    select: {
-      id: true,
-    },
-  });
-  return !Boolean(user);
-};
-
 const formSchema = z
   .object({
     username: z
@@ -59,16 +32,8 @@ const formSchema = z
       .min(USERNAME_MIN_LENGTH)
       .max(USERNAME_MAX_LENGTH)
       .toLowerCase()
-      .trim()
-      .refine(checkUniqueUsername, "This Username is already taken"),
-    email: z
-      .string()
-      .email()
-      .toLowerCase()
-      .refine(
-        checkUniqueEmail,
-        "This is account already registered with that E-mail"
-      ),
+      .trim(),
+    email: z.string().email().toLowerCase(),
     password: z.string().min(PASSWORD_MIN_LENGTH),
     // .regex(passwordRegex, "A password must have lowercase, UPPERCASE, a number and special characters."),
     confirmPassword: z.string().min(PASSWORD_MIN_LENGTH),
@@ -76,6 +41,44 @@ const formSchema = z
   .refine(checkPasswords, {
     message: "Both Passwords should be the Same!",
     path: ["confirmPassword"],
+  })
+  .superRefine(async ({ username }, ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "This username is already taken",
+        path: ["username"],
+        fatal: true,
+      });
+      return z.NEVER;
+    }
+  })
+  .superRefine(async ({ email }, ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "This email is already taken",
+        path: ["email"],
+        fatal: true,
+      });
+      return z.NEVER;
+    }
   });
 
 export async function createAccount(prevState: any, formData: FormData) {
@@ -88,6 +91,7 @@ export async function createAccount(prevState: any, formData: FormData) {
 
   const result = await formSchema.safeParseAsync(data);
   if (!result.success) {
+    console.log(result.error.flatten());
     return result.error.flatten();
   } else {
     const hashedPassword = await bcrypt.hash(result.data.password, 12);

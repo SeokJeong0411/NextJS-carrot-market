@@ -55,8 +55,8 @@ export async function login(prevState: any, formData: FormData) {
 
     if (ok) {
       const session = await getSession();
-
       session.id = user!.id;
+      await session.save();
       redirect("/profile");
     } else {
       return {
@@ -67,7 +67,4 @@ export async function login(prevState: any, formData: FormData) {
       };
     }
   }
-
-  // await new Promise((resolve) => setTimeout(resolve, 5000));
-  // console.log(data.get("password"), data.get("email"));
 }
