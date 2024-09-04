@@ -20,16 +20,22 @@ export default function Login() {
           type="email"
           placeholder="E-mail"
           required
-          errorMessage={state?.fieldErrors.email ? state?.fieldErrors.email[0] : undefined}
+          errorMessage={
+            state?.fieldErrors.email ? state?.fieldErrors.email[0] : undefined
+          }
         />
         <Input
           name="password"
           type="password"
           placeholder="Password"
           required
-          errorMessage={state?.fieldErrors.password ? state?.fieldErrors.password[0] : undefined}
+          errorMessage={
+            state?.fieldErrors.password
+              ? state?.fieldErrors.password[0]
+              : undefined
+          }
         />
-        <Button text="Create Account" />
+        <Button text="Log In" />
       </form>
       <div className="w-full h-px bg-neutral-500" />
 
